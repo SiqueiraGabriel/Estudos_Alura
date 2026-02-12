@@ -12,15 +12,36 @@ def formata_numero(valor, prefixo = ''):
     return f'{prefixo} {valor:.2f} milhões'
 
 
-
-
-
-
 # Obter os dados da API
 url = "https://labdados.com/produtos"
-response = requests.get(url)
+regioes = ['Brasil', 'Centro-Oeste', 'Nordeste', 'Norte', 'Sudeste', 'Sul']
+
+# Criação da barra lateral
+st.sidebar.title('Filtros')
+regiao = st.sidebar.selectbox('Região', regioes)
+
+if regiao == 'Brasil':
+    regiao = ''
+
+todos_anos = st.sidebar.checkbox('Dados de todo o período', value=True)
+
+if todos_anos:
+    ano = ''
+else:
+    ano = st.sidebar.slider('Ano', min_value=2020, max_value=2023)
+
+
+query_string = {'regiao': regiao.lower(), 'ano': ano}
+
+
+response = requests.get(url, params=query_string)
 dados = pd.DataFrame.from_dict(response.json())
 dados['Data da Compra'] = pd.to_datetime(dados['Data da Compra'], format='%d/%m/%Y')
+
+
+filtro_vendedores = st.sidebar.multiselect('Vendedores', dados['Vendedor'].unique())
+if filtro_vendedores:
+    dados = dados[dados['Vendedor'].isin(filtro_vendedores)]
 
 
 
@@ -195,12 +216,11 @@ with aba2:
 
 with aba3:
 
+    # Construção do gráfico de forma dinamica
     qtd_vendedores = st.number_input('Quantidade de Vendedores: ', min_value=2, max_value=10, value=5)
 
-    # Construção do gráfico de forma dinamica
 
-
-        # Criação de colunas
+    # Criação de colunas
     coluna1, coluna2 = st.columns(2)
 
     # O with especifica todos os valores que estão presentes dentro da coluna
@@ -234,6 +254,6 @@ with aba3:
 
 
 # Apresentar os dados na tela em forma de tabela
-st.dataframe(dados)
+#st.dataframe(dados)
 
 
